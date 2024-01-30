@@ -1,0 +1,79 @@
+﻿for (int i = 0; i < listProxy.Count; i++)
+            {
+                int index = i;
+
+                Thread thread = new Thread(() =>
+                {
+                    string proxyHost = listProxy[index].host;
+                    string proxyPort = listProxy[index].port;
+                    string proxyUsername = "passdayne";
+                    string proxyPassword = "passdayne";
+
+                    Proxy proxy = setProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
+
+                    ChromeOptions options = new ChromeOptions();
+                    options.Proxy = proxy;
+                    options.AddArgument("--window-size=428,923");
+                    options.AddArgument($"--window-position={index * 50},0");
+
+                    ChromeDriver chrome = new ChromeDriver(options);
+
+                    // Điều hướng đến trang Twitter
+                    chrome.Url = "https://twitter.com/";
+                    chrome.Navigate();
+
+                    // Chờ cho phần tử có class "css-1qaijid" xuất hiện trước khi thực hiện click
+                    WebDriverWait wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(30));
+
+                    WaitAndClickElement(chrome, By.ClassName("css-1qaijid"), 15);
+
+                    WaitAndSendElement(chrome, By.ClassName("r-30o5oe"), 0, $"{listAcc[index].userName}");
+
+                    WaitAndClickElement(chrome, By.ClassName("css-1rynq56"), 6);
+
+                    WaitAndSendElement(chrome, By.ClassName("r-30o5oe"), 1, $"{listAcc[index].passWorld}");
+
+                    WaitAndClickElement(chrome, By.ClassName("css-1rynq56"), 8);
+
+                    string key = authenMyGen($"{listAcc[index].authenticator}");
+
+                    WaitAndSendElement(chrome, By.ClassName("r-30o5oe"), 0, key);
+
+                    WaitAndClickElement(chrome, By.ClassName("css-1rynq56"), 9);
+
+                    // tab2
+                    chrome.ExecuteScript("window.open();");
+                    chrome.SwitchTo().Window(chrome.WindowHandles[1]);
+                    Thread.Sleep(1000);
+                    chrome.Url = "https://www.tiktok.com/";
+                    chrome.Navigate();
+                    wait.Until(driver => ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").Equals("complete")); // chờ web tải xong
+
+                    WaitAndClickElement(chrome, By.ClassName("css-176z6he-DivShowMore"), 0);
+
+                    WaitAndClickElement(chrome, By.ClassName("css-7u35li-DivBoxContainer"), 4);
+
+                    //// Chờ cho đến khi cửa sổ mới được mở
+                    //wait.Until(driver => driver.WindowHandles.Count > 1);
+
+                    //// cửa sổ gốc
+                    //string originalWindowHandle = chrome.CurrentWindowHandle;
+                    //Console.WriteLine($"Luồng 1 handle gốc {originalWindowHandle}");
+
+                    //// Chuyển sang cửa sổ mới
+                    //string newWindowHandle = chrome.WindowHandles.Last();
+                    //chrome.SwitchTo().Window(newWindowHandle);
+                    //Console.WriteLine($"Luồng 1 handle Mới {newWindowHandle}");
+                    //Thread.Sleep(3000);
+
+                    //wait.Until(elements => elements.FindElements(By.ClassName("submit")).Count >= 1);
+                    //IReadOnlyList<IWebElement> elements9 = chrome.FindElements(By.ClassName("submit"));
+                    //elements9[0].Click();
+
+                    //chrome.SwitchTo().Window(originalWindowHandle);
+                    //Console.WriteLine("Tới phân đoạn captcha");
+
+                    //string pageSource = chrome.PageSource;
+                });
+                thread.Start();
+            }

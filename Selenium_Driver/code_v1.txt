@@ -1,0 +1,101 @@
+﻿for (int i = 0; i < 1; i++)
+            {
+                int index = i; // Lưu giữ giá trị của biến i trong vòng lặp để tránh nhanh quá Thread này dùng phần tử Thread kia
+
+                Thread thread = new Thread(() =>
+                {
+                    string proxyHost = listProxy[index].host;
+                    string proxyPort = listProxy[index].port;
+                    string proxyUsername = "passdayne";
+                    string proxyPassword = "passdayne";
+
+                    Proxy proxy = setProxy(proxyHost, proxyPort, proxyUsername, proxyPassword);
+
+                    ChromeOptions options = new ChromeOptions();
+                    options.Proxy = proxy;
+                    options.AddArgument("--window-size=428,923");
+                    options.AddArgument($"--window-position={50 + index * 50},0");
+
+                    ChromeDriver chrome = new ChromeDriver(options);
+                    chrome.Url = "https://twitter.com/";
+                    chrome.Navigate();
+
+                    clickElementBylistElement("css-1qaijid", 15, chrome);
+
+                    Thread.Sleep(3000);
+
+                    IWebElement element = chrome.FindElement(By.ClassName("r-30o5oe"));
+                    Console.WriteLine("Elemeny get One >>>>>>>" + element);
+                    element.SendKeys(listAcc[index].userName);
+
+                    clickElementBylistElement("css-1rynq56", 6, chrome);
+                    Thread.Sleep(3000);
+
+                    setValueElementBylistElement("r-30o5oe", 1, chrome, $"{listAcc[index].passWorld}");
+                    Thread.Sleep(3000);
+
+                    clickElementBylistElement("css-1rynq56", 8, chrome);
+                    Thread.Sleep(3000);
+
+                    string key = authenMyGen(listAcc[index].authenticator);
+
+                    setValueElementBylistElement("r-30o5oe", 0, chrome, key);
+                    Thread.Sleep(3000);
+
+                    clickElementBylistElement("css-1rynq56", 9, chrome);
+                    Thread.Sleep(3000);
+
+                    // tab2
+                    chrome.ExecuteScript("window.open();");
+                    chrome.SwitchTo().Window(chrome.WindowHandles[1]);
+                    Thread.Sleep(1000);
+                    chrome.Url = "https://www.tiktok.com/";
+                    chrome.Navigate();
+                    Thread.Sleep(3000);
+
+                    clickElementBylistElement("css-176z6he-DivShowMore", 0, chrome);
+                    Thread.Sleep(3000);
+
+                    clickElementBylistElement("css-7u35li-DivBoxContainer", 4, chrome);
+                    Thread.Sleep(3000);
+
+                    // Chờ cho đến khi cửa sổ mới được mở
+                    WebDriverWait wait = new WebDriverWait(chrome, TimeSpan.FromSeconds(10));
+                    wait.Until(driver => driver.WindowHandles.Count > 1);
+
+                    // cửa sổ gốc
+                    string originalWindowHandle = chrome.CurrentWindowHandle;
+                    Console.WriteLine($"Luồng 1 handle gốc {originalWindowHandle}");
+
+                    // Chuyển sang cửa sổ mới
+                    string newWindowHandle = chrome.WindowHandles.Last();
+                    chrome.SwitchTo().Window(newWindowHandle);
+                    Console.WriteLine($"Luồng 1 handle Mới {newWindowHandle}");
+                    Thread.Sleep(3000);
+
+                    clickElementBylistElement("submit", 0, chrome);
+                    Thread.Sleep(3000);
+
+                    chrome.SwitchTo().Window(originalWindowHandle);
+                    Console.WriteLine("Tới phân đoạn captcha");
+
+                    string pageSource = chrome.PageSource;
+
+                    while (true)
+                    {
+                        if (pageSource.Contains("captcha_verify_container"))
+                        {
+                            Console.WriteLine("Xử lý Captcha đi bro");
+                            Thread.Sleep(1000);
+                        }
+                        else
+                        {
+                            Console.WriteLine("captcha đã được xử lý");
+                            break;
+                        }
+                    }
+
+                });
+
+                thread.Start();
+            }
